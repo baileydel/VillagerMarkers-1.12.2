@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "villagermarkers",
+    "name": "Villager Markers",
+    "description": "",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["wcl102"],
+    "credits": "Assets provided by - Grend_G",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

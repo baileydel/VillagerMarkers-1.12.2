@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.util.ResourceLocation;
+
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
@@ -24,13 +25,14 @@ public class Markers {
 
     public static final ResourceLocation MARKER_ARROW =  new ResourceLocation("textures/entity/villager/arrow.png");
 
+    //TODO MOVE THIS
     static Minecraft mc = Minecraft.getMinecraft();
 
     public static void renderMarker(EntityVillager entity, float partialTicks) {
         PacketVillagerData.Message data = getVillagerData(entity);
 
         if (entity.getHealth() <= 0) {
-            villagers.remove(entity.getUniqueID());
+            //villagers.remove(entity.getUniqueID());
             return;
         }
 
@@ -43,6 +45,7 @@ public class Markers {
         double maxDistance = VillagerMarkersConfig.maxDistance;
 
         if (distance > maxDistance) {
+            //villagers.remove(entity.getUniqueID());
             return;
         }
 
@@ -54,7 +57,7 @@ public class Markers {
 
         GlStateManager.pushMatrix();
 
-        GlStateManager.translate((float) (x - renderManager.viewerPosX), (float) (y - renderManager.viewerPosY + entity.height), (float) (z -renderManager.viewerPosZ));
+        GlStateManager.translate((float) (x - renderManager.viewerPosX), (float) (y - renderManager.viewerPosY + (entity.height + 0.5F)), (float) (z -renderManager.viewerPosZ));
 
         GL11.glNormal3f(0.0F, 1.0F, 0.0F);
         GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
@@ -67,13 +70,15 @@ public class Markers {
         GlStateManager.depthMask(false);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
+        int y2 = -18 - VillagerMarkersConfig.verticalOffset;
+
         boolean showArrow = VillagerMarkersConfig.showArrow;
 
         if (showArrow) {
-            Markers.renderArrow(0, -18);
+            Markers.renderArrow(0, y2);
         }
 
-        Markers.renderIcon(data,-8, -28, 16, 16, 0, 1, 0, 1);
+        Markers.renderIcon(data,-8, y2 - 10, 16, 16, 0, 1, 0, 1);
 
         GlStateManager.disableBlend();
         GlStateManager.enableDepth();
@@ -81,11 +86,10 @@ public class Markers {
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
-
     }
 
     public static void renderIcon(PacketVillagerData.Message data, int x, int y, int w, int h, float u0, float u1, float v0, float v1) {
-        mc.getTextureManager().bindTexture(data.resource);
+        mc.getTextureManager().bindTexture(getResource(data));
 
         BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
 
@@ -105,12 +109,24 @@ public class Markers {
         GlStateManager.popMatrix();
     }
 
+    private static ResourceLocation getResource(PacketVillagerData.Message data) {
+        ResourceLocation resource = resources.get(data.getCareerName());
+
+        if (resource == null) {
+            resource = new ResourceLocation("textures/entity/villager/markers/" + data.getCareerName() + ".png");
+
+            resources.put(data.getCareerName(), resource);
+        }
+        return resource;
+    }
+
     public static PacketVillagerData.Message getVillagerData(EntityVillager villager) {
         PacketVillagerData.Message data = villagers.get(villager.getUniqueID());
 
         if (data == null) {
             PacketHandler.INSTANCE.sendToServer(new PacketVillagerData.Message(villager.getUniqueID()));
             data = villagers.get(villager.getUniqueID());
+            System.out.println("adding villager");
         }
         return data;
     }

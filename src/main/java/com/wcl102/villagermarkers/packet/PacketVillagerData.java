@@ -5,7 +5,6 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -28,7 +27,7 @@ public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Me
                 NBTTagCompound tag = new NBTTagCompound();
 
                 villager.writeToNBT(tag);
-                //TODO I'm not sure how accurate this is
+
                 String profession = tag.getString("ProfessionName");
                 int career = tag.getInteger("Career") - 1;
 
@@ -53,7 +52,6 @@ public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Me
         private String careerName;
         private int career;
         private int careerlevel;
-        public ResourceLocation resource;
 
         public Message() {}
 
@@ -79,9 +77,6 @@ public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Me
                 this.careerName = this.tag.getString("CareerName");
                 this.career = this.tag.getInteger("Career");
                 this.careerlevel = this.tag.getInteger("CareerLevel");
-
-                //TODO remove this because we'll be using a resource cache
-                this.resource = new ResourceLocation("textures/entity/villager/markers/" + careerName + ".png");
             }
         }
 

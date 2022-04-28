@@ -1,12 +1,11 @@
 package com.wcl102.villagermarkers.packet;
 
-import com.wcl102.villagermarkers.render.Markers;
-import com.wcl102.villagermarkers.resource.VillagerResource;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -14,36 +13,18 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import java.util.Objects;
 import java.util.UUID;
 
-public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Message, IMessage> {
+public class PacketVillagerLevelUp implements IMessageHandler<PacketVillagerLevelUp.Message, IMessage> {
 
     @Override
-    public IMessage onMessage(PacketVillagerData.Message message, MessageContext ctx) {
+    public IMessage onMessage(PacketVillagerLevelUp.Message message, MessageContext ctx) {
         // Server Response
         if (ctx.side.isServer()) {
             EntityPlayerMP player = ctx.getServerHandler().player;
             EntityVillager villager = (EntityVillager) player.mcServer.getWorld(player.dimension).getEntityFromUuid(Objects.requireNonNull(UUID.fromString(message.tag.getString("UUID"))));
 
             if (villager != null) {
-                NBTTagCompound tag = new NBTTagCompound();
-
-                //TODO Clean up
-                villager.writeToNBT(tag);
-
-                String profession = tag.getString("ProfessionName");
-                int career = tag.getInteger("Career") - 1;
-
-                String careerName = villager.getProfessionForge().getCareer(career).getName();
-
-                int careerLevel = tag.getInteger("CareerLevel");
-
-                // Sent to Client
-                return new Message(villager.getUniqueID(), profession, careerName, career, careerLevel);
+                PacketHandler.INSTANCE.sendToAllAround(new PacketVillagerData().onMessage(new PacketVillagerData.Message(villager.getUniqueID()), ctx), new NetworkRegistry.TargetPoint(villager.dimension, villager.posX, villager.posY, villager.posZ, 128));
             }
-        }
-        else {
-            // Client Response
-            // TODO create Markers.add()
-            Markers.villagers.put(UUID.fromString(message.tag.getString("UUID")), new VillagerResource(message.tag));
         }
         return null;
     }
@@ -56,14 +37,6 @@ public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Me
         public Message(UUID uuid) {
             this.tag = new NBTTagCompound();
             this.tag.setString("UUID", uuid.toString());
-        }
-
-        public Message(UUID uuid, String profession, String careerName,  int career, int careerlevel) {
-            this(uuid);
-            this.tag.setString("Profession", profession);
-            this.tag.setString("CareerName", careerName);
-            this.tag.setInteger("Career", career);
-            this.tag.setInteger("CareerLevel", careerlevel);
         }
 
         @Override

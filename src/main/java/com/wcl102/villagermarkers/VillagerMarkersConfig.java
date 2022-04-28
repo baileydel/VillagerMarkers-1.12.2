@@ -12,10 +12,15 @@ public class VillagerMarkersConfig {
         "nitwit"
     };
 
+    //TODO
     public static boolean showThroughwalls = true;
+
     public static boolean showArrow = true;
 
+    public static int overlayIndex = 4;
+
     public static double maxDistance = 64;
+
     public static double fadePercent = 25;
 
     public static int verticalOffset = 0;
@@ -24,5 +29,4 @@ public class VillagerMarkersConfig {
     public static List<String> getBlackList() {
         return Arrays.asList(blacklist);
     }
-
 }

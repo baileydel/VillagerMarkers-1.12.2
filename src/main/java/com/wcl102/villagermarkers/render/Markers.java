@@ -3,6 +3,8 @@ package com.wcl102.villagermarkers.render;
 import com.wcl102.villagermarkers.VillagerMarkersConfig;
 import com.wcl102.villagermarkers.packet.PacketHandler;
 import com.wcl102.villagermarkers.packet.PacketVillagerData;
+import com.wcl102.villagermarkers.resource.MarkerResource;
+import com.wcl102.villagermarkers.resource.VillagerResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -12,7 +14,7 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.util.ResourceLocation;
-
+import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
@@ -20,76 +22,150 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class Markers {
-    public static final HashMap<UUID, PacketVillagerData.Message> villagers = new HashMap<>();
-    public static final HashMap<String, ResourceLocation> resources = new HashMap<>();
+    public static final HashMap<UUID, VillagerResource> villagers = new HashMap<>();
 
-    public static final ResourceLocation MARKER_ARROW =  new ResourceLocation("textures/entity/villager/arrow.png");
+    public static final ResourceLocation MARKER_ARROW = new ResourceLocation("textures/entity/villager/arrow.png");
+    public static final ResourceLocation ICON_OVERLAY = new ResourceLocation("textures/entity/villager/overlay.png");
+    public static final ResourceLocation NUMBER_OVERLAY = new ResourceLocation("textures/entity/villager/numbers.png");
+    public static final ResourceLocation DEFAULT_ICON = new ResourceLocation("textures/entity/villager/default.png");
 
     //TODO MOVE THIS
     static Minecraft mc = Minecraft.getMinecraft();
 
     public static void renderMarker(EntityVillager entity, float partialTicks) {
-        PacketVillagerData.Message data = getVillagerData(entity);
-
         if (entity.getHealth() <= 0) {
-            //villagers.remove(entity.getUniqueID());
-            return;
-        }
-
-        if (VillagerMarkersConfig.getBlackList().contains(data.getCareerName())) {
+            villagers.remove(entity.getUniqueID());
             return;
         }
 
         float distance = entity.getDistance(Objects.requireNonNull(mc.getRenderViewEntity()));
-
         double maxDistance = VillagerMarkersConfig.maxDistance;
 
         if (distance > maxDistance) {
-            //villagers.remove(entity.getUniqueID());
+            villagers.remove(entity.getUniqueID());
             return;
         }
 
-        double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * (double) partialTicks;
-        double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * (double) partialTicks;
-        double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * (double) partialTicks;
+        VillagerResource resource = getVillagerResource(entity);
 
-        RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
+        if (resource != null) {
+            if (VillagerMarkersConfig.getBlackList().contains(resource.getCareerName())) {
+                return;
+            }
 
+            RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
+            double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * (double) partialTicks;
+            double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * (double) partialTicks;
+            double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * (double) partialTicks;
+
+            GlStateManager.pushMatrix();
+
+            GlStateManager.translate(
+                    (float) (x - renderManager.viewerPosX),
+                    (float) (y - renderManager.viewerPosY + (entity.height + 0.5F)),
+                    (float) (z - renderManager.viewerPosZ)
+            );
+
+            GL11.glNormal3f(0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
+            GlStateManager.scale(-0.025F, -0.025F, 0.025F);
+
+
+            double fadePercent = VillagerMarkersConfig.fadePercent;
+            double currentAlpha = 1.0;
+
+            if (fadePercent < 100.0) {
+                double startFade = ((1.0 - (fadePercent / 100.0)) * maxDistance);
+
+                currentAlpha = MathHelper.clamp(1.0 - ((distance - startFade) / (maxDistance - startFade)), 0.0, 1.0);
+            }
+
+            GlStateManager.enableBlend();
+            GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GlStateManager.disableDepth();
+            GlStateManager.depthMask(false);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 0.3F * (float)currentAlpha);
+
+            int y2 = -18 - VillagerMarkersConfig.verticalOffset;
+
+            boolean showArrow = VillagerMarkersConfig.showArrow;
+
+            if (showArrow) {
+                renderArrow(0, y2);
+            }
+
+            renderMarker(resource.getMarker(), -8, showArrow ? y2 - 9 : y2);
+
+            GlStateManager.disableBlend();
+            GlStateManager.enableDepth();
+            GlStateManager.depthMask(true);
+
+            renderMarker(resource.getMarker(), -8, showArrow ? y2 - 9 : y2);
+
+            if (showArrow) {
+                renderArrow(0, y2);
+            }
+
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.popMatrix();
+        }
+    }
+
+    public static void renderMarker(MarkerResource resource, int x, int y) {
+        //TODO SCALE
         GlStateManager.pushMatrix();
 
-        GlStateManager.translate((float) (x - renderManager.viewerPosX), (float) (y - renderManager.viewerPosY + (entity.height + 0.5F)), (float) (z -renderManager.viewerPosZ));
+        renderIcon(resource.texture, x, y);
 
-        GL11.glNormal3f(0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate(-renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
+        renderOverlay(resource, (dx, dy, width, height, sx, sy) -> {
+            GlStateManager.translate(0, 0, -1);
 
-        GlStateManager.scale(-0.025F, -0.025F, 0.025F);
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GlStateManager.disableDepth();
-        GlStateManager.depthMask(false);
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            float imageSize = resource.overlay == MarkerResource.OverlayType.LEVEL ? 32.0F : 16.0F;
 
-        int y2 = -18 - VillagerMarkersConfig.verticalOffset;
-
-        boolean showArrow = VillagerMarkersConfig.showArrow;
-
-        if (showArrow) {
-            Markers.renderArrow(0, y2);
-        }
-
-        Markers.renderIcon(data,-8, y2 - 10, 16, 16, 0, 1, 0, 1);
-
-        GlStateManager.disableBlend();
-        GlStateManager.enableDepth();
-        GlStateManager.depthMask(true);
-
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            renderIcon(resource.overlay == MarkerResource.OverlayType.LEVEL ? NUMBER_OVERLAY : ICON_OVERLAY, x + dx, y + dy, width, height, sx / imageSize, (sx + width) / imageSize, sy / imageSize, (sy + height) / imageSize);
+        });
         GlStateManager.popMatrix();
     }
 
-    public static void renderIcon(PacketVillagerData.Message data, int x, int y, int w, int h, float u0, float u1, float v0, float v1) {
-        mc.getTextureManager().bindTexture(getResource(data));
+    @FunctionalInterface
+    public interface OverlayRendererMethod {
+        void accept(int dx, int dy, int width, int height, int sx, int sy);
+    }
+
+    public static void renderOverlay(MarkerResource resource, OverlayRendererMethod method) {
+        if (resource.overlay == MarkerResource.OverlayType.LEVEL) {
+            renderOverlayLevel(resource, method);
+        }
+        else if (resource.overlay != MarkerResource.OverlayType.NONE) {
+            renderOverlayIcon(resource, method);
+        }
+    }
+
+    private static void renderOverlayLevel(MarkerResource resource, OverlayRendererMethod method) {
+        int processedDigits = resource.level;
+        int xOffset = 8;
+
+        // If the overlay is set to "profession level" and this marker has a level to show, add every digit needed.
+        // Even though vanilla only supports a max level of 5, this should support any profession level.
+        while (processedDigits > 0) {
+            int currentDigit = processedDigits % 10;
+            method.accept(xOffset, 8, 8, 8, (currentDigit % 4) * 8, (currentDigit / 4) * 8);
+            processedDigits /= 10;
+            xOffset -= 5;
+        }
+    }
+
+    private static void renderOverlayIcon(MarkerResource resource, OverlayRendererMethod method) {
+        method.accept(8, 8, 8, 8, (resource.overlay.value() % 2) * 8, (resource.overlay.value() / 2) * 8);
+    }
+
+    private static void renderIcon(ResourceLocation icon, int x, int y) {
+        renderIcon(icon, x, y, 16, 16, 0, 1, 0, 1);
+    }
+
+    public static void renderIcon(ResourceLocation icon, int x, int y, int w, int h, float u0, float u1, float v0, float v1) {
+        mc.getTextureManager().bindTexture(icon);
 
         BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
 
@@ -109,25 +185,10 @@ public class Markers {
         GlStateManager.popMatrix();
     }
 
-    private static ResourceLocation getResource(PacketVillagerData.Message data) {
-        ResourceLocation resource = resources.get(data.getCareerName());
-
-        if (resource == null) {
-            resource = new ResourceLocation("textures/entity/villager/markers/" + data.getCareerName() + ".png");
-
-            resources.put(data.getCareerName(), resource);
-        }
-        return resource;
-    }
-
-    public static PacketVillagerData.Message getVillagerData(EntityVillager villager) {
-        PacketVillagerData.Message data = villagers.get(villager.getUniqueID());
-
-        if (data == null) {
+    public static VillagerResource getVillagerResource(EntityVillager villager) {
+        if (!villagers.containsKey(villager.getUniqueID())) {
             PacketHandler.INSTANCE.sendToServer(new PacketVillagerData.Message(villager.getUniqueID()));
-            data = villagers.get(villager.getUniqueID());
-            System.out.println("adding villager");
         }
-        return data;
+        return villagers.get(villager.getUniqueID());
     }
 }

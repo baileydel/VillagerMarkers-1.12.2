@@ -20,7 +20,7 @@ public class VillagerMarkers {
     public static final String VERSION = "1.0";
 
     @Mod.EventHandler
-    public static void start(FMLInitializationEvent event) {
+    public static void FMLInitialization(FMLInitializationEvent event) {
         PacketHandler.init();
     }
 
@@ -29,7 +29,7 @@ public class VillagerMarkers {
     public static void RenderWorldLast(RenderWorldLastEvent event) {
         try {
             for (Entity e : Minecraft.getMinecraft().player.world.getLoadedEntityList()) {
-                if (e instanceof EntityVillager) {
+                if (e instanceof EntityVillager)  {
                     Markers.renderMarker((EntityVillager) e, event.getPartialTicks());
                 }
             }

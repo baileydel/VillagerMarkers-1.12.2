@@ -11,11 +11,12 @@ public class PacketHandler {
 
     public static void init() {
         registerMessage(PacketVillagerData.class, PacketVillagerData.Message.class);
+        registerMessage(PacketVillagerLevelUp.class, PacketVillagerLevelUp.Message.class);
     }
 
     private static int nextPacketId = 0;
 
-    //TODO use ????? to get rid of errors
+    //TODO use ????? to get rid of warnings
     private static void registerMessage(Class packet, Class message) {
         INSTANCE.registerMessage(packet, message, nextPacketId, Side.CLIENT);
         INSTANCE.registerMessage(packet, message, nextPacketId, Side.SERVER);

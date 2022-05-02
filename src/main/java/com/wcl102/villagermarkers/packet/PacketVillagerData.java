@@ -26,23 +26,18 @@ public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Me
             if (villager != null) {
                 NBTTagCompound tag = new NBTTagCompound();
 
-                //TODO Clean up
                 villager.writeToNBT(tag);
 
-                String profession = tag.getString("ProfessionName");
                 int career = tag.getInteger("Career") - 1;
-
+                int careerLevel = tag.getInteger("CareerLevel");
                 String careerName = villager.getProfessionForge().getCareer(career).getName();
 
-                int careerLevel = tag.getInteger("CareerLevel");
-
                 // Sent to Client
-                return new Message(villager.getUniqueID(), profession, careerName, career, careerLevel);
+                return new Message(villager.getUniqueID(), careerName, career, careerLevel);
             }
         }
         else {
             // Client Response
-            // TODO create Markers.add()
             Markers.villagers.put(UUID.fromString(message.tag.getString("UUID")), new VillagerResource(message.tag));
         }
         return null;
@@ -58,9 +53,8 @@ public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Me
             this.tag.setString("UUID", uuid.toString());
         }
 
-        public Message(UUID uuid, String profession, String careerName,  int career, int careerlevel) {
+        public Message(UUID uuid, String careerName,  int career, int careerlevel) {
             this(uuid);
-            this.tag.setString("Profession", profession);
             this.tag.setString("CareerName", careerName);
             this.tag.setInteger("Career", career);
             this.tag.setInteger("CareerLevel", careerlevel);

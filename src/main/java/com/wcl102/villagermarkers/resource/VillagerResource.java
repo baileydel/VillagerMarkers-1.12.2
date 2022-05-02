@@ -7,21 +7,16 @@ import net.minecraft.util.ResourceLocation;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO Move marker resource, any villager can use any marker resource..
 public class VillagerResource {
     public static final Map<String, MarkerResource> resourceCache = new HashMap<>();
 
-    private String profession;
     private final String careerName;
-    private final int career;
-    private int level;
+    private final int level;
 
     private MarkerResource marker;
 
     public VillagerResource(NBTTagCompound tag) {
-        this.profession = tag.getString("Profession");
         this.careerName = tag.getString("CareerName");
-        this.career = tag.getInteger("Career");
         this.level = tag.getInteger("CareerLevel");
     }
 
@@ -33,16 +28,14 @@ public class VillagerResource {
             return resourceCache.get(resourceKey);
         }
 
-        MarkerResource marker = null;
+        MarkerResource marker;
         MarkerResource.OverlayType overlayType = MarkerResource.OverlayType.fromValue(VillagerMarkersConfig.overlayIndex).orElse(MarkerResource.OverlayType.NONE);
 
-        //TODO the rest of this
 
-
-        if (marker == null) {
+        //if (marker == null) {
             ResourceLocation resource = new ResourceLocation(String.format("textures/entity/villager/markers/%s.png", this.careerName));
             marker = new MarkerResource(resource, overlayType, this.level);
-        }
+        //}
 
         resourceCache.put(resourceKey, marker);
         return marker;
@@ -50,13 +43,5 @@ public class VillagerResource {
 
     public String getCareerName() {
         return this.careerName;
-    }
-
-    public int getCareer() {
-        return this.career;
-    }
-
-    public int getCareerlevel() {
-        return this.level;
     }
 }

@@ -10,15 +10,16 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.UUID;
 
 public class Markers {
@@ -27,18 +28,28 @@ public class Markers {
     public static final ResourceLocation MARKER_ARROW = new ResourceLocation("textures/entity/villager/arrow.png");
     public static final ResourceLocation ICON_OVERLAY = new ResourceLocation("textures/entity/villager/overlay.png");
     public static final ResourceLocation NUMBER_OVERLAY = new ResourceLocation("textures/entity/villager/numbers.png");
+    //TODO if can't find resource to villager default to this
     public static final ResourceLocation DEFAULT_ICON = new ResourceLocation("textures/entity/villager/default.png");
 
-    //TODO MOVE THIS
+    private static final Frustum frustum = new Frustum();
+
     static Minecraft mc = Minecraft.getMinecraft();
 
     public static void renderMarker(EntityVillager entity, float partialTicks) {
+        Entity cameraEntity = mc.getRenderViewEntity();
+
+        assert cameraEntity != null;
+
         if (entity.getHealth() <= 0) {
             villagers.remove(entity.getUniqueID());
             return;
         }
 
-        float distance = entity.getDistance(Objects.requireNonNull(mc.getRenderViewEntity()));
+        if (!entity.canEntityBeSeen(cameraEntity) && !VillagerMarkersConfig.showThroughWalls) {
+            return;
+        }
+
+        float distance = entity.getDistance(cameraEntity);
         double maxDistance = VillagerMarkersConfig.maxDistance;
 
         if (distance > maxDistance) {
@@ -49,7 +60,7 @@ public class Markers {
         VillagerResource resource = getVillagerResource(entity);
 
         if (resource != null) {
-            if (VillagerMarkersConfig.getBlackList().contains(resource.getCareerName())) {
+            if (VillagerMarkersConfig.isBlackListed(resource.getCareerName())) {
                 return;
             }
 
@@ -57,6 +68,12 @@ public class Markers {
             double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * (double) partialTicks;
             double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * (double) partialTicks;
             double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * (double) partialTicks;
+
+            frustum.setPosition(x, y, z);
+
+            if (!frustum.isBoundingBoxInFrustum(entity.getEntityBoundingBox())) {
+                return;
+            }
 
             GlStateManager.pushMatrix();
 
@@ -71,13 +88,11 @@ public class Markers {
             GlStateManager.rotate(renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
             GlStateManager.scale(-0.025F, -0.025F, 0.025F);
 
-
             double fadePercent = VillagerMarkersConfig.fadePercent;
             double currentAlpha = 1.0;
 
             if (fadePercent < 100.0) {
                 double startFade = ((1.0 - (fadePercent / 100.0)) * maxDistance);
-
                 currentAlpha = MathHelper.clamp(1.0 - ((distance - startFade) / (maxDistance - startFade)), 0.0, 1.0);
             }
 
@@ -87,24 +102,24 @@ public class Markers {
             GlStateManager.depthMask(false);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 0.3F * (float)currentAlpha);
 
-            int y2 = -18 - VillagerMarkersConfig.verticalOffset;
+            int yPos = -18 - VillagerMarkersConfig.verticalOffset;
 
             boolean showArrow = VillagerMarkersConfig.showArrow;
 
             if (showArrow) {
-                renderArrow(0, y2);
+                renderArrow(0, yPos);
             }
 
-            renderMarker(resource.getMarker(), -8, showArrow ? y2 - 9 : y2);
+            renderMarker(resource.getMarker(), -8, showArrow ? yPos - 9 : yPos);
 
             GlStateManager.disableBlend();
             GlStateManager.enableDepth();
             GlStateManager.depthMask(true);
 
-            renderMarker(resource.getMarker(), -8, showArrow ? y2 - 9 : y2);
+            renderMarker(resource.getMarker(), -8, showArrow ? yPos - 9 : yPos);
 
             if (showArrow) {
-                renderArrow(0, y2);
+                renderArrow(0, yPos);
             }
 
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -113,8 +128,10 @@ public class Markers {
     }
 
     public static void renderMarker(MarkerResource resource, int x, int y) {
-        //TODO SCALE
         GlStateManager.pushMatrix();
+
+        double scale = VillagerMarkersConfig.scale;
+        GlStateManager.scale(scale, scale, scale);
 
         renderIcon(resource.texture, x, y);
 
@@ -125,6 +142,7 @@ public class Markers {
 
             renderIcon(resource.overlay == MarkerResource.OverlayType.LEVEL ? NUMBER_OVERLAY : ICON_OVERLAY, x + dx, y + dy, width, height, sx / imageSize, (sx + width) / imageSize, sy / imageSize, (sy + height) / imageSize);
         });
+
         GlStateManager.popMatrix();
     }
 

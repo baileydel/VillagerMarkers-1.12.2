@@ -17,7 +17,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class VillagerMarkers {
     public static final String MODID = "villagermarkers";
     public static final String NAME = "Villager Markers";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.0.2";
 
     @Mod.EventHandler
     public static void FMLInitialization(FMLInitializationEvent event) {

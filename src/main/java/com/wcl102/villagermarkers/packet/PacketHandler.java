@@ -6,15 +6,13 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
 public class PacketHandler {
-
     public static final SimpleNetworkWrapper INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(VillagerMarkers.MODID);
+    private static int nextPacketId = 0;
 
     public static void init() {
         registerMessage(PacketVillagerData.class, PacketVillagerData.Message.class);
         registerMessage(PacketVillagerLevelUp.class, PacketVillagerLevelUp.Message.class);
     }
-
-    private static int nextPacketId = 0;
 
     //TODO use ????? to get rid of warnings
     private static void registerMessage(Class packet, Class message) {

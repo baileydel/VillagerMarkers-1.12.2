@@ -7,7 +7,7 @@ import net.minecraftforge.fml.relauncher.Side;
 
 public class PacketHandler {
     public static final SimpleNetworkWrapper INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(VillagerMarkers.MODID);
-    private static int nextPacketId = 0;
+    private static int packetId = 0;
 
     public static void init() {
         registerMessage(PacketVillagerData.class, PacketVillagerData.Message.class);
@@ -16,8 +16,8 @@ public class PacketHandler {
 
     //TODO use ????? to get rid of warnings
     private static void registerMessage(Class packet, Class message) {
-        INSTANCE.registerMessage(packet, message, nextPacketId, Side.CLIENT);
-        INSTANCE.registerMessage(packet, message, nextPacketId, Side.SERVER);
-        nextPacketId++;
+        INSTANCE.registerMessage(packet, message, packetId, Side.CLIENT);
+        INSTANCE.registerMessage(packet, message, packetId, Side.SERVER);
+        packetId++;
     }
 }

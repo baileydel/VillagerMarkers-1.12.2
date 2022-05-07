@@ -2,7 +2,9 @@ package com.wcl102.villagermarkers;
 
 import com.wcl102.villagermarkers.packet.PacketHandler;
 import com.wcl102.villagermarkers.render.Markers;
+import com.wcl102.villagermarkers.resource.ReloadListener;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -17,11 +19,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class VillagerMarkers {
     public static final String MODID = "villagermarkers";
     public static final String NAME = "Villager Markers";
-    public static final String VERSION = "1.0.2";
+    public static final String VERSION = "1.0.3";
 
     @Mod.EventHandler
     public static void FMLInitialization(FMLInitializationEvent event) {
         PacketHandler.init();
+
+        ((IReloadableResourceManager)Minecraft.getMinecraft().getResourceManager()).registerReloadListener(new ReloadListener());
     }
 
     @SubscribeEvent

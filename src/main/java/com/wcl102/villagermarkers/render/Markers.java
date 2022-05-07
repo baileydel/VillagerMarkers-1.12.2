@@ -28,8 +28,6 @@ public class Markers {
     public static final ResourceLocation MARKER_ARROW = new ResourceLocation("textures/entity/villager/arrow.png");
     public static final ResourceLocation ICON_OVERLAY = new ResourceLocation("textures/entity/villager/overlay.png");
     public static final ResourceLocation NUMBER_OVERLAY = new ResourceLocation("textures/entity/villager/numbers.png");
-    //TODO if can't find resource to villager default to this
-    public static final ResourceLocation DEFAULT_ICON = new ResourceLocation("textures/entity/villager/default.png");
 
     private static final Frustum frustum = new Frustum();
 
@@ -57,21 +55,21 @@ public class Markers {
             return;
         }
 
+        RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
+        double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * (double) partialTicks;
+        double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * (double) partialTicks;
+        double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * (double) partialTicks;
+
+        frustum.setPosition(x, y, z);
+
+        if (!frustum.isBoundingBoxInFrustum(entity.getEntityBoundingBox())) {
+            return;
+        }
+
         VillagerResource resource = getVillagerResource(entity);
 
         if (resource != null) {
             if (VillagerMarkersConfig.isBlackListed(resource.getCareerName())) {
-                return;
-            }
-
-            RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
-            double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * (double) partialTicks;
-            double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * (double) partialTicks;
-            double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * (double) partialTicks;
-
-            frustum.setPosition(x, y, z);
-
-            if (!frustum.isBoundingBoxInFrustum(entity.getEntityBoundingBox())) {
                 return;
             }
 

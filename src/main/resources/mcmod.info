@@ -1,16 +1,16 @@
 [
-{
-  "modid": "villagermarkers",
-  "name": "Villager Markers",
-  "description": "You are now able to identify pesky villager careers in 1.12.2, no more guessing which villager has which career.",
-  "version": "1.0.2",
-  "mcversion": "",
-  "url": "https://www.curseforge.com/minecraft/mc-mods/villager-markers",
-  "updateUrl": "",
-  "authorList": ["wcl102"],
-  "credits": "Assets provided by - Grend_G",
-  "logoFile": "assets/icon.png",
-  "screenshots": [],
-  "dependencies": []
-}
+  {
+    "modid": "villagermarkers",
+    "name": "Villager Markers",
+    "description": "You are now able to identify pesky villager careers in 1.12.2, no more guessing which villager has which career.",
+    "version": "1.0.3",
+    "mcversion": "",
+    "url": "https://www.curseforge.com/minecraft/mc-mods/villager-markers",
+    "updateUrl": "",
+    "authorList": ["wcl102"],
+    "credits": "Assets provided by - Grend_G",
+    "logoFile": "assets/icon.png",
+    "screenshots": [],
+    "dependencies": []
+  }
 ]

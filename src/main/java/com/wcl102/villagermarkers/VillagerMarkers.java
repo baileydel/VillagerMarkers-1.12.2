@@ -2,7 +2,6 @@ package com.wcl102.villagermarkers;
 
 import com.wcl102.villagermarkers.packet.PacketHandler;
 import com.wcl102.villagermarkers.render.Markers;
-import com.wcl102.villagermarkers.resource.ReloadListener;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.entity.Entity;
@@ -24,8 +23,6 @@ public class VillagerMarkers {
     @Mod.EventHandler
     public static void FMLInitialization(FMLInitializationEvent event) {
         PacketHandler.init();
-
-        ((IReloadableResourceManager)Minecraft.getMinecraft().getResourceManager()).registerReloadListener(new ReloadListener());
     }
 
     @SubscribeEvent

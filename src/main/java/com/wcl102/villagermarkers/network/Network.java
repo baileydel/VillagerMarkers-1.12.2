@@ -1,23 +1,20 @@
-package com.wcl102.villagermarkers.packet;
+package com.wcl102.villagermarkers.network;
 
 import com.wcl102.villagermarkers.VillagerMarkers;
+import com.wcl102.villagermarkers.network.packets.PacketVillagerData;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
-public class PacketHandler {
+public class Network {
     public static final SimpleNetworkWrapper INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(VillagerMarkers.MODID);
-    private static int packetId = 0;
 
     public static void init() {
         registerMessage(PacketVillagerData.class, PacketVillagerData.Message.class);
-        registerMessage(PacketVillagerLevelUp.class, PacketVillagerLevelUp.Message.class);
     }
 
-    //TODO use ????? to get rid of warnings
     private static void registerMessage(Class packet, Class message) {
-        INSTANCE.registerMessage(packet, message, packetId, Side.CLIENT);
-        INSTANCE.registerMessage(packet, message, packetId, Side.SERVER);
-        packetId++;
+        INSTANCE.registerMessage(packet, message, 0, Side.CLIENT);
+        INSTANCE.registerMessage(packet, message, 0, Side.SERVER);
     }
 }

@@ -1,7 +1,7 @@
-package com.wcl102.villagermarkers.packet;
+package com.wcl102.villagermarkers.network.packets;
 
-import com.wcl102.villagermarkers.render.Markers;
-import com.wcl102.villagermarkers.resource.VillagerResource;
+import com.wcl102.villagermarkers.client.ClientVillagerManager;
+import com.wcl102.villagermarkers.client.resource.VillagerResource;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -21,24 +21,19 @@ public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Me
         // Server Response
         if (ctx.side.isServer()) {
             EntityPlayerMP player = ctx.getServerHandler().player;
+            //TODO redo
             EntityVillager villager = (EntityVillager) player.mcServer.getWorld(player.dimension).getEntityFromUuid(Objects.requireNonNull(UUID.fromString(message.tag.getString("UUID"))));
 
             if (villager != null) {
-                NBTTagCompound tag = new NBTTagCompound();
+                VillagerResource r = new VillagerResource(villager);
 
-                villager.writeToNBT(tag);
-
-                int career = tag.getInteger("Career") - 1;
-                int careerLevel = tag.getInteger("CareerLevel");
-                String careerName = villager.getProfessionForge().getCareer(career).getName();
-
-                // Sent to Client
-                return new Message(villager.getUniqueID(), careerName, career, careerLevel);
+                // Send to Client
+                return new Message(villager.getUniqueID(), r);
             }
         }
         else {
             // Client Response
-            Markers.villagers.put(UUID.fromString(message.tag.getString("UUID")), new VillagerResource(message.tag));
+            ClientVillagerManager.add(UUID.fromString(message.tag.getString("UUID")), new VillagerResource(message.tag));
         }
         return null;
     }
@@ -48,16 +43,16 @@ public class PacketVillagerData implements IMessageHandler<PacketVillagerData.Me
 
         public Message() {}
 
+        public Message(UUID uuid, VillagerResource resource) {
+            this(uuid);
+            this.tag.setString("Career", resource.getCareerName());
+            this.tag.setInteger("CareerLevel", resource.getLevel());
+        }
+
+        // Used by client to ask for villager data.
         public Message(UUID uuid) {
             this.tag = new NBTTagCompound();
             this.tag.setString("UUID", uuid.toString());
-        }
-
-        public Message(UUID uuid, String careerName,  int career, int careerlevel) {
-            this(uuid);
-            this.tag.setString("CareerName", careerName);
-            this.tag.setInteger("Career", career);
-            this.tag.setInteger("CareerLevel", careerlevel);
         }
 
         @Override

@@ -1,12 +1,20 @@
-package com.wcl102.villagermarkers.resource;
+package com.wcl102.villagermarkers.client.resource;
 
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
+@SideOnly(Side.CLIENT)
 public class MarkerResource {
+    public static final ResourceLocation DEFAULT_ICON = new ResourceLocation("textures/entity/villager/default.png");
+    public static final ResourceLocation MARKER_ARROW = new ResourceLocation("textures/entity/villager/arrow.png");
+    public static final ResourceLocation ICON_OVERLAY = new ResourceLocation("textures/entity/villager/overlay.png");
+    public static final ResourceLocation NUMBER_OVERLAY = new ResourceLocation("textures/entity/villager/numbers.png");
+
     public final ResourceLocation texture;
     public final OverlayType overlay;
     public final int level;
@@ -39,21 +47,14 @@ public class MarkerResource {
     }
 
     public enum OverlayType {
-        NONE(-1),
-        BACKPACK(0),
-        EMERALD(1),
-        COINS(2),
-        BAG(3),
-        LEVEL(4);
+        NONE(0),
+        ICON(1),
+        LEVEL(2);
 
         private final int value;
 
-        private OverlayType(int value) {
+        OverlayType(int value) {
             this.value = value;
-        }
-
-        public int value() {
-            return value;
         }
 
         public static Optional<OverlayType> fromValue(int value) {
